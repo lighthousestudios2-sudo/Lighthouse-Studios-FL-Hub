@@ -1953,14 +1953,19 @@ desc: project.Description,
   }));
 };
 
-  setComments(prev => ({
-    ...prev,
-    [id]: [...(prev[id] || []), c]
-  }));
-}; setComments(prev => ({ ...prev, [id]:[...(prev[id]||[]), c] }));
-  const addFile    = (id, f) => setFiles(prev =>    ({ ...prev, [id]:[...(prev[id]||[]), f] }));
+ setComments(prev => ({
+  ...prev,
+  [id]: [...(prev[id] || []), c]
+}));
+};
 
-  const proj = projects.find(p => p.id === projId);
+const addFile = (id, f) =>
+  setFiles(prev => ({
+    ...prev,
+    [id]: [...(prev[id] || []), f]
+  }));
+
+const proj = projects.find(p => p.id === projId);
 
   return (
     <div>
