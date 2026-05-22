@@ -1848,7 +1848,38 @@ const App = () => {
 
   const [comments, setComments] = useState(INIT_COMMENTS);
   const [files,    setFiles]    = useState(INIT_FILES);
+const [projects, setProjects] = useState([]);
 
+useEffect(() => {
+  const loadProjects = async () => {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*');
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setProjects(
+      data.map(project => ({
+        id: project.id,
+        title: project.title,
+        client: project.client,
+        status: project.status,
+        progress: project.progress,
+        dueDate: project.due_date,
+        desc: project.description,
+        type: 'Brand / Commercial',
+        tier: 'Growth',
+        accentColor: '#F2B544',
+        milestones: [],
+      }))
+    );
+  };
+
+  loadProjects();
+}, []);
   const handleLogin = async (email, pw) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -1881,7 +1912,7 @@ const App = () => {
   const addComment = (id, c) => setComments(prev => ({ ...prev, [id]:[...(prev[id]||[]), c] }));
   const addFile    = (id, f) => setFiles(prev =>    ({ ...prev, [id]:[...(prev[id]||[]), f] }));
 
-  const proj = PROJECTS.find(p => p.id === projId);
+  const proj = projects.find(p => p.id === projId);
 
   return (
     <div>
