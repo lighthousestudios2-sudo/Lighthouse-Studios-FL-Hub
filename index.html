@@ -1900,7 +1900,6 @@ desc: project.Description,
   setComments(grouped);
 };
 
-loadComments();
 }, []);
   const handleLogin = async (email, pw) => {
   const { data, error } = await supabase.auth.signInWithPassword({
