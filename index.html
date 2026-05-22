@@ -1928,8 +1928,8 @@ desc: project.Description,
     else         { setIsAdmin(true);  setView('admin'); }
   };
 
-  const addComment = async (id, c) => {
-  const { data, error } = await supabase
+ const addComment = async (id, c) => {
+  const { error } = await supabase
     .from('Comments')
     .insert([
       {
@@ -1946,6 +1946,12 @@ desc: project.Description,
     console.error(error);
     return;
   }
+
+  setComments(prev => ({
+    ...prev,
+    [id]: [...(prev[id] || []), c]
+  }));
+};
 
   setComments(prev => ({
     ...prev,
