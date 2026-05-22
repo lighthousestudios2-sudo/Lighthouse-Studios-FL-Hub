@@ -1846,7 +1846,7 @@ const App = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loginErr, setLoginErr] = useState('');
 
-  const [comments, setComments] = useState(INIT_COMMENTS);
+  const [comments, setComments] = useState({});
   const [files,    setFiles]    = useState(INIT_FILES);
 const [projects, setProjects] = useState([]);
 
@@ -1878,7 +1878,37 @@ desc: project.Description,
     );
   };
 
-  loadProjects();
+  loadProjects();const loadComments = async () => {
+  const { data, error } = await supabase
+    .from('Comments')
+    .select('*');
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const grouped = {};
+
+  data.forEach(comment => {
+    if (!grouped[comment.project_id]) {
+      grouped[comment.project_id] = [];
+    }
+
+    grouped[comment.project_id].push({
+      id: comment.id,
+      author: comment.author,
+      ini: comment.ini,
+      role: comment.role,
+      time: comment.time,
+      text: comment.text,
+    });
+  });
+
+  setComments(grouped);
+};
+
+loadComments();
 }, []);
   const handleLogin = async (email, pw) => {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -1909,7 +1939,30 @@ desc: project.Description,
     else         { setIsAdmin(true);  setView('admin'); }
   };
 
-  const addComment = (id, c) => setComments(prev => ({ ...prev, [id]:[...(prev[id]||[]), c] }));
+  const addComment = async (id, c) => {
+  const { data, error } = await supabase
+    .from('Comments')
+    .insert([
+      {
+        project_id: id,
+        author: c.author,
+        ini: c.ini,
+        role: c.role,
+        time: c.time,
+        text: c.text,
+      }
+    ]);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setComments(prev => ({
+    ...prev,
+    [id]: [...(prev[id] || []), c]
+  }));
+}; setComments(prev => ({ ...prev, [id]:[...(prev[id]||[]), c] }));
   const addFile    = (id, f) => setFiles(prev =>    ({ ...prev, [id]:[...(prev[id]||[]), f] }));
 
   const proj = projects.find(p => p.id === projId);
