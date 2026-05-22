@@ -1,10 +1,10 @@
 {
-  "name": "Lighthouse Studios Client Hub",
-  "short_name": "Lighthouse Hub",
+  "name": "Lighthouse Studio Hub",
+  "short_name": "Studio Hub",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFCF5",
-  "theme_color": "#0F3D47",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "icons": [
     {
       "src": "/icon.png",
