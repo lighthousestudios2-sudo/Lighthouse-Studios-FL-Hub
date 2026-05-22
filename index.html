@@ -259,8 +259,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="text/babel">
+ const SUPABASE_URL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4dmtpbmJoaGZ0ZWZxaXJzcmhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MjI5NjEsImV4cCI6MjA5NDk5ODk2MX0.eZp6cPj2IsFK0o43QWMT4j3CKN70VinqReHwdCDwMhM';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4dmtpbmJoaGZ0ZWZxaXJzcmhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MjI5NjEsImV4cCI6MjA5NDk5ODk2MX0.eZp6cPj2IsFK0o43QWMT4j3CKN70VinqReHwdCDwMhM';
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 const { useState, useRef, useEffect, useCallback } = React;
 
 /* ═══════════════════════════════════════════════════════════
