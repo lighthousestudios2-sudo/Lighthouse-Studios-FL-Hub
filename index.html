@@ -1880,22 +1880,6 @@ desc: project.Description,
 
   loadProjects();
 
-  const grouped = {};
-
-  data.forEach(comment => {
-    if (!grouped[comment.project_id]) {
-      grouped[comment.project_id] = [];
-    }
-
-    grouped[comment.project_id].push({
-      id: comment.id,
-      author: comment.author,
-      ini: comment.ini,
-      role: comment.role,
-      time: comment.time,
-      text: comment.text,
-    });
-  });
 
 
 }, []);
