@@ -1849,11 +1849,27 @@ const App = () => {
   const [comments, setComments] = useState(INIT_COMMENTS);
   const [files,    setFiles]    = useState(INIT_FILES);
 
-  const handleLogin = (email, pw) => {
-    const found = USERS.find(u => u.email===email && u.pw===pw);
-    if (found) { setUser(found); setLoginErr(''); setView('dashboard'); }
-    else setLoginErr('Incorrect credentials. Use one of the demo login buttons below.');
-  };
+  const handleLogin = async (email, pw) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: pw,
+  });
+
+  if (error) {
+    setLoginErr(error.message);
+    return;
+  }
+
+  setUser({
+    name: email,
+    email: email,
+    role: 'admin',
+    ini: email[0].toUpperCase(),
+  });
+
+  setLoginErr('');
+  setView('dashboard');
+};
 
   const selectProject = id => { setProjId(id); setView('project'); setIsAdmin(false); };
 
