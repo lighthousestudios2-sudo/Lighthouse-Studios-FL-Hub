@@ -1931,11 +1931,6 @@ desc: project.Description,
     return;
   }
 
-  setComments(prev => ({
-    ...prev,
-    [id]: [...(prev[id] || []), c]
-  }));
-};
 
  setComments(prev => ({
   ...prev,
