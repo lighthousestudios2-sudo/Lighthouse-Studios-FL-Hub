@@ -1853,7 +1853,7 @@ const [projects, setProjects] = useState([]);
 useEffect(() => {
   const loadProjects = async () => {
     const { data, error } = await supabase
-      .from('projects')
+      .from('Projects')
       .select('*');
 
     if (error) {
