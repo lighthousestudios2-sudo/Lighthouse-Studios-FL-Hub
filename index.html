@@ -1878,15 +1878,7 @@ desc: project.Description,
     );
   };
 
-  loadProjects();const loadComments = async () => {
-  const { data, error } = await supabase
-    .from('Comments')
-    .select('*');
-
-  if (error) {
-    console.error(error);
-    return;
-  }
+  loadProjects();
 
   const grouped = {};
 
