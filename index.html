@@ -489,7 +489,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 const R2_WORKER_URL = 'https://r2-upload-worker.lighthousestudios2.workers.dev';
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51Tb39lQrakqlctCBFZKLI3VRZIx8dapBVIrrzdhrMfhfoxDjvJvsnOVO5MCPWk9DbH3GxEZG9iMO84woKRmBbKlD00fv3im7JW';
+const _PUBLISHABLE_KEY = 'pk_test_51Tb39lQrakqlctCBFZKLI3VRZIx8dapBVIrrzdhrMfhfoxDjvJvsnOVO5MCPWk9DbH3GxEZG9iMO84woKRmBbKlD00fv3im7JW';
 const SUPABASE_FUNCTIONS_URL = 'https://rxvkinbhhftefqirsrhk.supabase.co/functions/v1';
 
 const { useState, useRef, useEffect, useCallback } = React;
@@ -2510,6 +2510,16 @@ const App = () => {
   const[clients,setClients]     = useState([]);
   const[commentsByProject,setCommentsByProject] = useState({});
   const[projectModal,setProjectModal] = useState(null);
+  const[pendingRedirect,setPendingRedirect] = useState(()=>{
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const returnProjectId = params.get('project_id');
+    if(returnProjectId){
+      window.history.replaceState({}, '', '/');
+      return { paymentStatus, returnProjectId };
+    }
+    return null;
+  });
 
   const mapProject = row => ({
     id:row.id, title:row.title||'', client:row.client||'', status:row.status||'In Production',
@@ -2598,21 +2608,19 @@ const App = () => {
 
  // Handle Stripe redirect back
   useEffect(()=>{
+    if(!pendingRedirect) return;
     if(projects.length===0) return;
-    const params = new URLSearchParams(window.location.search);
-    const paymentStatus = params.get('payment');
-    const returnProjectId = params.get('project_id');
-    if(paymentStatus==='success' && returnProjectId){
+    const { paymentStatus, returnProjectId } = pendingRedirect;
+    if(paymentStatus==='success'){
       handleProjectUpdate(returnProjectId, { paid: true, paid_at: new Date().toISOString() });
       setProjId(returnProjectId);
       setView('payment-success');
-      window.history.replaceState({}, '', '/');
-    } else if(returnProjectId){
+    } else {
       setProjId(returnProjectId);
       setView('project');
-      window.history.replaceState({}, '', '/');
     }
-  },[projects]);
+    setPendingRedirect(null);
+  },[pendingRedirect, projects]);
   useEffect(()=>{
     if(!user) return;
     const ch = supabase.channel('app-comments-feed')
