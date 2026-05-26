@@ -2596,8 +2596,9 @@ const App = () => {
     setUser(u); await loadProjects(); setView('dashboard');
   };
 
-  // Handle Stripe redirect back
+ // Handle Stripe redirect back
   useEffect(()=>{
+    if(projects.length===0) return;
     const params = new URLSearchParams(window.location.search);
     const paymentStatus = params.get('payment');
     const returnProjectId = params.get('project_id');
@@ -2612,7 +2613,6 @@ const App = () => {
       window.history.replaceState({}, '', '/');
     }
   },[projects]);
-
   useEffect(()=>{
     if(!user) return;
     const ch = supabase.channel('app-comments-feed')
