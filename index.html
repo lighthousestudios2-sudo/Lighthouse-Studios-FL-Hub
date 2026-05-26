@@ -1376,7 +1376,7 @@ const DEFAULT_PHASES     = ['Discovery','Scripting','Shoot Day','Edit','Delivery
 const DEFAULT_DELIVERABLES = ['Short-form video','Long-form video','Pictures for carousels','Ads managed','Thumbnails','Copy','Landing page','Website'];
 const TIER_OPTIONS       = ['Starter','Premium','Pro'];
 
-const ProjectModal = ({ initial, clients, onSave, onClose }) => {
+const ProjectModal = ({ initial, clients: initialClients, onSave, onClose }) => {
   const isEdit = !!initial?.id;
   const [title, setTitle]         = useState(initial?.title||'');
   const [client, setClient]       = useState(initial?.client||'');
@@ -1395,6 +1395,13 @@ const ProjectModal = ({ initial, clients, onSave, onClose }) => {
   const [paymentDate, setPaymentDate] = useState(initial?.payment_date||'');
   const [saving, setSaving]       = useState(false);
   const [err, setErr]             = useState('');
+  const [clients, setClients]     = useState(initialClients||[]);
+
+  // Re-fetch clients fresh every time modal opens
+  useEffect(()=>{
+    supabase.from('profiles').select('id,name,role').order('name')
+      .then(({data})=>{ if(data) setClients(data); });
+  },[]);
 
   const PROJECT_TYPES  = ['Brand / Commercial','Wedding Film','Event Coverage','Real Estate'];
   const STATUS_OPTIONS = ['In Production','Filming','In Editing','Delivered'];
