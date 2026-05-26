@@ -717,40 +717,6 @@ const TopNav = ({ user, view, onNav, onLogout }) => (
     </div>
   </div>
 );
-  <div style={{ position:'sticky',top:0,zIndex:200,background:T.dark,borderBottom:'1px solid rgba(255,252,245,0.07)' }}>
-    <div className="nav-inner">
-      <button onClick={onDashboard} style={{ background:'none',border:'none',padding:0,display:'flex',alignItems:'center',gap:10,flexShrink:0 }}>
-        <div style={{ fontFamily:"'Fraunces',serif",fontSize:16,fontWeight:900,letterSpacing:'-0.03em',lineHeight:1,color:T.bg,whiteSpace:'nowrap' }}>
-          Lighthouse <span style={{ color:T.gold,fontStyle:'italic' }}>Studios</span>
-        </div>
-        <div style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8,letterSpacing:'0.15em',textTransform:'uppercase',color:'rgba(255,252,245,0.22)',paddingLeft:10,borderLeft:'1px solid rgba(255,252,245,0.1)',whiteSpace:'nowrap' }}>Hub</div>
-      </button>
-      <div className="nav-right">
-        {user&&user.role==='admin'&&(
-          <button onClick={onToggleAdmin} style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'0.1em',textTransform:'uppercase',background:isAdmin?T.gold:'rgba(242,181,68,0.1)',color:isAdmin?T.dark:T.gold,border:`1px solid ${isAdmin?T.gold:'rgba(242,181,68,0.25)'}`,borderRadius:5,padding:'6px 12px',fontWeight:600,transition:'all 0.15s',whiteSpace:'nowrap' }}
-            onMouseEnter={e=>e.currentTarget.style.boxShadow='0 0 14px rgba(242,181,68,0.4)'}
-            onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
-            {isAdmin?'← Dash':'⚡ Admin'}
-          </button>
-        )}
-        {user&&(
-          <div style={{ display:'flex',alignItems:'center',gap:8 }}>
-            <Avatar ini={user.ini} size={30} />
-            <div>
-              <div className="nav-user-name" style={{ color:T.bg }}>{user.name}</div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8,letterSpacing:'0.1em',textTransform:'uppercase',color:user.role==='admin'?T.gold:T.mist }}>{user.role}</div>
-            </div>
-          </div>
-        )}
-        <button onClick={onLogout} style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:9,letterSpacing:'0.08em',textTransform:'uppercase',background:'transparent',color:'rgba(255,252,245,0.6)',border:'1px solid rgba(255,252,245,0.2)',borderRadius:5,padding:'6px 11px',transition:'all 0.15s',whiteSpace:'nowrap' }}
-          onMouseEnter={e=>{e.currentTarget.style.color='rgba(255,252,245,0.9)';e.currentTarget.style.borderColor='rgba(255,252,245,0.4)';}}
-          onMouseLeave={e=>{e.currentTarget.style.color='rgba(255,252,245,0.6)';e.currentTarget.style.borderColor='rgba(255,252,245,0.2)';}}>
-          <span className="nav-signout-label">Sign Out</span>
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 /* ── Dashboard ── */
 const StatBlock = ({ label, value, sub, accent=false, animClass='' }) => (
