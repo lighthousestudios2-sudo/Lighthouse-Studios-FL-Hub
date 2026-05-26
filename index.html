@@ -1793,11 +1793,16 @@ const ProjectDetailView = ({ p, onBack, user, onProjectUpdate, onProjectDelete }
     setProgress(v);
     setSavingProgress(true);
     const updates = {progress:v};
-    if(v===100) updates.status='Completed';
+    if(v===100){
+      updates.status='Completed';
+      setProjectStatus('Completed');
+    } else if(projectStatus==='Completed'||projectStatus==='Archived'){
+      updates.status='In Production';
+      setProjectStatus('In Production');
+    }
     const{error}=await supabase.from('projects').update(updates).eq('id',p.id);
     if(!error){
       onProjectUpdate(p.id, updates);
-      if(v===100) setProjectStatus('Completed');
       setSaved(true); setTimeout(()=>setSaved(false),2000);
     }
     setSavingProgress(false);
