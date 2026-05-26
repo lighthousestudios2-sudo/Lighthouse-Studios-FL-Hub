@@ -1954,8 +1954,49 @@ const ProjectDetailView = ({ p, onBack, user, onProjectUpdate, onProjectDelete }
 
 /* ── Completed & Archive View ── */
 const CompletedView = ({ user, projects, onSelect, onArchive, onUnarchive }) => {
+  const [typeFilter,   setTypeFilter]   = useState('All');
+  const [clientFilter, setClientFilter] = useState('All');
+
   const completed = projects.filter(p=>(p.progress===100||p.status==='Completed')&&p.status!=='Archived');
   const archived  = projects.filter(p=>p.status==='Archived');
+  const allClients = [...new Set([...completed,...archived].filter(p=>p.client).map(p=>p.client))].sort();
+
+  const applyFilters = (list) => {
+    let f = list;
+    if(typeFilter!=='All')   f = f.filter(p=>p.type===typeFilter);
+    if(clientFilter!=='All') f = f.filter(p=>p.client===clientFilter);
+    return f;
+  };
+
+  const filteredCompleted = applyFilters(completed);
+  const filteredArchived  = applyFilters(archived);
+
+  const FilterBar = () => (
+    <div style={{ display:'flex',gap:7,flexWrap:'wrap',marginBottom:22,alignItems:'center' }}>
+      {['All',...PROJECT_TYPES].map(t=>(
+        <button key={t} onClick={()=>setTypeFilter(t)}
+          style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,letterSpacing:'0.08em',padding:'5px 10px',borderRadius:5,border:`1px solid ${typeFilter===t?T.dark:T.border}`,background:typeFilter===t?T.dark:'transparent',color:typeFilter===t?T.gold:T.mid,fontWeight:typeFilter===t?600:400,transition:'all 0.15s',whiteSpace:'nowrap' }}>
+          {t}
+        </button>
+      ))}
+      {allClients.length>0&&(
+        <select value={clientFilter} onChange={e=>setClientFilter(e.target.value)}
+          style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,padding:'5px 24px 5px 9px',borderRadius:5,border:`1px solid ${clientFilter!=='All'?T.dark:T.border}`,background:clientFilter!=='All'?T.dark:'transparent',color:clientFilter!=='All'?T.gold:T.mid,cursor:'pointer',appearance:'none',backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",backgroundRepeat:'no-repeat',backgroundPosition:'right 7px center' }}>
+          <option value="All">All Clients</option>
+          {allClients.map(c=><option key={c} value={c}>{c}</option>)}
+        </select>
+      )}
+      {(typeFilter!=='All'||clientFilter!=='All')&&(
+        <button onClick={()=>{setTypeFilter('All');setClientFilter('All');}}
+          style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,padding:'5px 10px',borderRadius:5,border:`1px solid ${T.border}`,background:'transparent',color:T.mid,cursor:'pointer',transition:'all 0.15s' }}
+          onMouseEnter={e=>{e.currentTarget.style.color=T.dark;e.currentTarget.style.borderColor=T.dark;}}
+          onMouseLeave={e=>{e.currentTarget.style.color=T.mid;e.currentTarget.style.borderColor=T.border;}}>
+          Clear ×
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div style={{ background:T.bg,minHeight:'calc(100vh - 58px)' }}>
       <div className="header-pad" style={{ background:T.dark,position:'relative',overflow:'hidden' }}>
@@ -1964,14 +2005,18 @@ const CompletedView = ({ user, projects, onSelect, onArchive, onUnarchive }) => 
         <div style={{ fontFamily:"'Fraunces',serif",fontSize:28,fontWeight:900,color:T.bg,letterSpacing:'-0.03em' }}>
           Completed <span style={{ color:'#4ade80',fontStyle:'italic',fontWeight:400 }}>Work</span>
         </div>
+        <div style={{ fontSize:13,color:'rgba(255,252,245,0.35)',marginTop:4 }}>
+          {completed.length} completed · {archived.length} archived
+        </div>
       </div>
       <div className="page-pad">
-        {completed.length>0&&(
+        <FilterBar/>
+        {filteredCompleted.length>0&&(
           <div style={{ marginBottom:36 }}>
-            <MonoLabel color={T.mid} size={9} gap={5}>Completed ({completed.length})</MonoLabel>
+            <MonoLabel color={T.mid} size={9} gap={5}>Completed ({filteredCompleted.length})</MonoLabel>
             <DisplayTitle size={20} style={{ marginBottom:18 }}>Ready to <em style={{ color:'rgba(15,61,71,0.3)',fontStyle:'italic',fontWeight:400 }}>Archive</em></DisplayTitle>
             <div className="proj-grid">
-              {completed.map((p,i)=>(
+              {filteredCompleted.map((p,i)=>(
                 <div key={p.id} style={{ position:'relative' }}>
                   <ProjCard p={p} onClick={()=>onSelect(p.id)} animClass={`card-reveal-${Math.min(i+1,4)}`}/>
                   {user?.role==='admin'&&(
@@ -1985,17 +2030,17 @@ const CompletedView = ({ user, projects, onSelect, onArchive, onUnarchive }) => 
             </div>
           </div>
         )}
-        {archived.length>0&&(
+        {filteredArchived.length>0&&(
           <div>
-            <MonoLabel color={T.mid} size={9} gap={5}>Archived ({archived.length})</MonoLabel>
+            <MonoLabel color={T.mid} size={9} gap={5}>Archived ({filteredArchived.length})</MonoLabel>
             <DisplayTitle size={20} style={{ marginBottom:18 }}>Past <em style={{ color:'rgba(15,61,71,0.3)',fontStyle:'italic',fontWeight:400 }}>Projects</em></DisplayTitle>
             <div className="proj-grid">
-              {archived.map((p,i)=>(
+              {filteredArchived.map((p,i)=>(
                 <div key={p.id} style={{ position:'relative',opacity:0.85 }}>
                   <ProjCard p={p} onClick={()=>onSelect(p.id)} animClass={`card-reveal-${Math.min(i+1,4)}`}/>
-                  {user?.role==='admin'&&onUnarchive&&(
+                  {user?.role==='admin'&&(
                     <button onClick={e=>{e.stopPropagation();onUnarchive(p.id);}}
-                      style={{ position:'absolute',top:12,right:12,fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,letterSpacing:'0.08em',textTransform:'uppercase',background:'rgba(15,61,71,0.7)',color:T.bg,border:'none',borderRadius:5,padding:'4px 10px',cursor:'pointer',fontWeight:600,zIndex:5 }}>
+                      style={{ position:'absolute',top:12,right:12,fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,letterSpacing:'0.08em',textTransform:'uppercase',background:'rgba(15,61,71,0.75)',color:T.bg,border:'none',borderRadius:5,padding:'4px 10px',cursor:'pointer',fontWeight:600,zIndex:5 }}>
                       Restore
                     </button>
                   )}
@@ -2004,11 +2049,15 @@ const CompletedView = ({ user, projects, onSelect, onArchive, onUnarchive }) => 
             </div>
           </div>
         )}
-        {completed.length===0&&archived.length===0&&(
+        {filteredCompleted.length===0&&filteredArchived.length===0&&(
           <div style={{ textAlign:'center',padding:'60px 0',color:T.mid }}>
             <div style={{ fontSize:32,marginBottom:10 }}>🏆</div>
-            <div style={{ fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:700,color:T.dark,marginBottom:5 }}>No completed projects yet</div>
-            <div style={{ fontSize:13 }}>Projects at 100% progress will appear here automatically.</div>
+            <div style={{ fontFamily:"'Fraunces',serif",fontSize:18,fontWeight:700,color:T.dark,marginBottom:5 }}>
+              {completed.length===0&&archived.length===0?'No completed projects yet':'No projects match this filter'}
+            </div>
+            <div style={{ fontSize:13 }}>
+              {completed.length===0&&archived.length===0?'Projects at 100% will appear here.':'Try adjusting the filters above.'}
+            </div>
           </div>
         )}
       </div>
@@ -2138,16 +2187,45 @@ const ResolveAIStudio=()=>{
 /* ── Admin ── */
 const AdminView = ({ projects, onSelect, onNewProject, onEditProject, onDeleteProject, onArchiveProject }) => {
   const [filter, setFilter]           = useState('All');
+  const [clientFilter, setClientFilter] = useState('All');
+  const [sortBy, setSortBy]           = useState('default');
   const [templates, setTemplates]     = useState([]);
   const [tmplLoad, setTmplLoad]       = useState(true);
   const [clients, setClients]         = useState([]);
-  const [editTemplate, setEditTemplate]   = useState(null);   // null=closed, {}=new, {id,...}=edit
+  const [editTemplate, setEditTemplate]   = useState(null);
   const [useTemplate, setUseTemplate]     = useState(null);
   const [deleteTemplate, setDeleteTemplate] = useState(null);
   const [confirmDelProj, setConfirmDelProj] = useState(null);
 
   const types=['All','Brand / Commercial','Wedding Film','Event Coverage','Real Estate'];
-  const rows = filter==='All' ? projects : projects.filter(p=>p.type===filter);
+  const allClients = [...new Set(projects.filter(p=>p.client).map(p=>p.client))].sort();
+
+  const SORT_OPTIONS = [
+    {value:'default',  label:'Default'},
+    {value:'client',   label:'Client A–Z'},
+    {value:'type',     label:'Project Type'},
+    {value:'status',   label:'Status'},
+    {value:'tier',     label:'Tier'},
+    {value:'progress', label:'Progress'},
+    {value:'due_date', label:'Due Date'},
+  ];
+
+  let rows = projects.filter(p=>{
+    if(filter!=='All'&&p.type!==filter)return false;
+    if(clientFilter!=='All'&&p.client!==clientFilter)return false;
+    return true;
+  });
+
+  // Sort
+  rows = [...rows].sort((a,b)=>{
+    if(sortBy==='client')   return (a.client||'').localeCompare(b.client||'');
+    if(sortBy==='type')     return (a.type||'').localeCompare(b.type||'');
+    if(sortBy==='status')   return (a.status||'').localeCompare(b.status||'');
+    if(sortBy==='tier')     return (a.tier||'').localeCompare(b.tier||'');
+    if(sortBy==='progress') return b.progress-a.progress;
+    if(sortBy==='due_date') return new Date(a.due_date||'9999')-new Date(b.due_date||'9999');
+    return 0;
+  });
 
   useEffect(()=>{
     const loadTemplates = async () => {
@@ -2236,7 +2314,21 @@ const AdminView = ({ projects, onSelect, onNewProject, onEditProject, onDeletePr
               <DisplayTitle size={21}>All <em style={{ color:'rgba(15,61,71,0.35)',fontStyle:'italic',fontWeight:400 }}>Projects</em></DisplayTitle>
             </div>
             <div style={{ display:'flex',gap:6,flexWrap:'wrap',alignItems:'center' }}>
+              {/* Type filter tabs */}
               {types.map(t=><button key={t} onClick={()=>setFilter(t)} style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,letterSpacing:'0.08em',padding:'5px 11px',borderRadius:5,border:`1px solid ${filter===t?T.dark:T.border}`,background:filter===t?T.dark:'transparent',color:filter===t?T.gold:T.mid,fontWeight:filter===t?600:400,transition:'all 0.15s',whiteSpace:'nowrap' }}>{t}</button>)}
+              {/* Client dropdown */}
+              {allClients.length>0&&(
+                <select value={clientFilter} onChange={e=>setClientFilter(e.target.value)}
+                  style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,padding:'5px 24px 5px 9px',borderRadius:5,border:`1px solid ${clientFilter!=='All'?T.dark:T.border}`,background:clientFilter!=='All'?T.dark:'transparent',color:clientFilter!=='All'?T.gold:T.mid,cursor:'pointer',appearance:'none',backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",backgroundRepeat:'no-repeat',backgroundPosition:'right 7px center' }}>
+                  <option value="All">All Clients</option>
+                  {allClients.map(c=><option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
+              {/* Sort by */}
+              <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
+                style={{ fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,padding:'5px 24px 5px 9px',borderRadius:5,border:`1px solid ${sortBy!=='default'?T.dark:T.border}`,background:sortBy!=='default'?T.dark:'transparent',color:sortBy!=='default'?T.gold:T.mid,cursor:'pointer',appearance:'none',backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",backgroundRepeat:'no-repeat',backgroundPosition:'right 7px center' }}>
+                {SORT_OPTIONS.map(s=><option key={s.value} value={s.value}>Sort: {s.label}</option>)}
+              </select>
               <button className="btn-gold" onClick={()=>onEditProject(null)} style={{ padding:'7px 16px',fontSize:11.5,whiteSpace:'nowrap' }}>+ New Project</button>
             </div>
           </div>
