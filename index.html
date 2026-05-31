@@ -609,7 +609,130 @@ const ConfirmDialog = ({ title, message, onConfirm, onCancel, danger=true }) => 
     </div>
   </div>
 );
+/* ── Share Modal ── */
+const ShareModal = ({ project, onClose, onSaved }) => {
+  const [message, setMessage] = useState(project.share_message || '');
+  const [expiry,  setExpiry]  = useState('90');
+  const [saving,  setSaving]  = useState(false);
+  const [copied,  setCopied]  = useState(false);
+  const [link,    setLink]    = useState('');
+  const [err,     setErr]     = useState('');
 
+  useEffect(() => {
+    if (project.share_token) {
+      const expires = project.share_expires_at;
+      if (!expires) setExpiry('never');
+      else {
+        const days = Math.round((new Date(expires) - new Date()) / (1000*60*60*24));
+        if (days <= 8) setExpiry('7');
+        else if (days <= 31) setExpiry('30');
+        else setExpiry('90');
+      }
+      setLink(`${window.location.origin}${window.location.pathname}#/share/${project.share_token}`);
+    }
+  }, []);
+
+  const generateToken = () =>
+    Array.from(crypto.getRandomValues(new Uint8Array(18)))
+      .map(b => b.toString(36)).join('').slice(0, 24);
+
+  const save = async () => {
+    setSaving(true); setErr('');
+    const token = project.share_token || generateToken();
+    let expiresAt = null;
+    if (expiry !== 'never') {
+      const d = new Date();
+      d.setDate(d.getDate() + parseInt(expiry));
+      expiresAt = d.toISOString();
+    }
+    const updates = { share_token: token, share_expires_at: expiresAt, share_message: message.trim() || null };
+    const { error } = await supabase.from('projects').update(updates).eq('id', project.id);
+    if (error) { setErr(error.message); setSaving(false); return; }
+    const generatedLink = `${window.location.origin}${window.location.pathname}#/share/${token}`;
+    setLink(generatedLink);
+    if (onSaved) onSaved(updates);
+    setSaving(false);
+  };
+
+  const revoke = async () => {
+    setSaving(true);
+    await supabase.from('projects').update({ share_token: null, share_expires_at: null, share_message: null }).eq('id', project.id);
+    setLink('');
+    if (onSaved) onSaved({ share_token: null, share_expires_at: null, share_message: null });
+    setSaving(false);
+  };
+
+  const copy = () => {
+    navigator.clipboard.writeText(link);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
+  };
+
+  const EXPIRY_OPTIONS = [
+    { value: '7',     label: '7 days' },
+    { value: '30',    label: '30 days' },
+    { value: '90',    label: '90 days' },
+    { value: 'never', label: 'Never expires' },
+  ];
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" style={{ maxWidth:520 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div style={{ fontFamily:"'Fraunces',serif", fontSize:19, fontWeight:700, color:T.dark, marginBottom:2 }}>Share Deliverables</div>
+            <div style={{ fontSize:12.5, color:T.mid }}>{project.title}{project.client ? ` · ${project.client}` : ''}</div>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, color:T.mid, lineHeight:1, padding:4 }}>×</button>
+        </div>
+        <div className="modal-body">
+          {err && <div className="error-banner">{err}</div>}
+          <div className="form-field">
+            <label className="form-label">Message to Client</label>
+            <textarea className="form-textarea" value={message} onChange={e => setMessage(e.target.value)}
+              placeholder="e.g. Congrats Sarah! Here are your wedding photos 🤍" rows={3}/>
+            <div style={{ fontSize:11, color:T.mid, marginTop:5 }}>This appears at the top of the client's download page.</div>
+          </div>
+          <div className="form-field">
+            <label className="form-label">Link Expiry</label>
+            <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
+              {EXPIRY_OPTIONS.map(o => (
+                <button key={o.value} onClick={() => setExpiry(o.value)}
+                  style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9.5, letterSpacing:'0.07em', padding:'7px 13px', borderRadius:6, border:`1px solid ${expiry===o.value?T.dark:T.border}`, background:expiry===o.value?T.dark:'transparent', color:expiry===o.value?T.gold:T.mid, fontWeight:expiry===o.value?600:400, transition:'all 0.15s', cursor:'pointer' }}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {link && (
+            <div style={{ marginTop:4, background:T.subtle, border:`1px solid ${T.border}`, borderRadius:9, padding:'14px 16px' }}>
+              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:'0.14em', textTransform:'uppercase', color:T.mid, marginBottom:8 }}>Client Link</div>
+              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                <div style={{ flex:1, fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:T.dark, wordBreak:'break-all', lineHeight:1.5 }}>{link}</div>
+                <button onClick={copy} className="btn-gold" style={{ padding:'8px 14px', fontSize:12, whiteSpace:'nowrap', flexShrink:0 }}>
+                  {copied ? '✓ Copied!' : 'Copy Link'}
+                </button>
+              </div>
+              <div style={{ marginTop:10, paddingTop:10, borderTop:`1px solid ${T.border}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:11, color:T.mid }}>{expiry==='never'?'Never expires':`Expires in ${expiry} days`}</span>
+                <button onClick={revoke} style={{ fontSize:11, color:'rgba(220,38,38,0.6)', background:'none', border:'none', cursor:'pointer', fontFamily:"'JetBrains Mono',monospace" }}
+                  onMouseEnter={e=>e.currentTarget.style.color='#dc2626'}
+                  onMouseLeave={e=>e.currentTarget.style.color='rgba(220,38,38,0.6)'}>
+                  Revoke link
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button className="btn-ghost" onClick={onClose} style={{ padding:'10px 20px', fontSize:13 }}>Close</button>
+          <button className="btn-gold" onClick={save} disabled={saving} style={{ padding:'10px 26px', fontSize:13, display:'flex', alignItems:'center', gap:8 }}>
+            {saving ? <><Spinner size={14}/> Saving…</> : link ? 'Update Link' : 'Generate Link →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 /* ── Login ── */
 const LoginView = ({ onLogin, err }) => {
   const [mode,setMode]=useState('login');
