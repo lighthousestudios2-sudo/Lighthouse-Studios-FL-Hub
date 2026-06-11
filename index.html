@@ -1301,20 +1301,15 @@ const FileRow = ({ f, user, onDelete }) => {
   const [deleting, setDeleting] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
 
-  const download = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ key: f.object_key, name: f.name });
-      const res = await fetch(`${R2_WORKER_URL}/download?${params}`);
-      if (!res.ok) throw new Error('Download failed');
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl; a.download = f.name; a.click();
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-    } catch (err) {
-      console.error(err); alert('Download failed. Please try again.');
-    } finally { setLoading(false); }
+  const download = () => {
+    const params = new URLSearchParams({ key: f.object_key, name: f.name });
+    const url = `${R2_WORKER_URL}/download?${params}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = f.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const handleDelete = async () => {
